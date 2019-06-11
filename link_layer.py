@@ -8,7 +8,7 @@ class linklayer:
         self.UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         
         self.UDPSocket.bind((self.localIP, self.localPort))
-        self.UDPSocket.setblocking(False)
+     #   self.UDPSocket.setblocking(False)
         self.recieving=True
     
     def sendData(self,port,data):
@@ -18,12 +18,11 @@ class linklayer:
         print("recieving")
         while(self.recieving):
             msgFromServer = self.UDPSocket.recvfrom(self.bufferSize)
-            print(msgFromServer.decode())
+            print(msgFromServer[0].decode())
 
  
-class linklayerThreaded(threading.Thread):
+class linklayerThreaded:
     def __init__(self,UDPSocket,bufferSize):
-        threading.Thread.__init__(self)
         self.localIP="127.0.0.1"
         self.bufferSize=bufferSize
         self.UDPSocket = UDPSocket
@@ -38,13 +37,14 @@ class linklayerThreaded(threading.Thread):
             try:
                 msgFromServer = self.UDPSocket.recvfrom(self.bufferSize)
             except socket.error as r:
-                print("i got error")
-                print(r)
-            print(msgFromServer.decode())
+                print("i got error",r)
+            print(msgFromServer[0].decode())
 
 
 class Node:
     def  __init__(self,filePath):
+        print("sdfhsdj")
+     
         self.commandList=["interfaces","routes","down","up","send","q","traceroute"]
         self.node_info=Node_info(filePath)
         self.lk=linklayer(self.node_info.lport,100)
@@ -59,13 +59,13 @@ class Node:
                 print(self.commandList[0])
             elif(command[0]==self.commandList[1]):#routes
                 print(self.commandList[1])
-            elif(command[0]==self.commandList[2]):#down
+            elif(command[0]==self.commandList[2]):#downsen
                 print(self.commandList[2])
             elif(command[0]==self.commandList[3]):#up
                 print(self.commandList[3])
             elif(command[0]==self.commandList[4]):#send
                 interfaceNum=int(command[1])
-                node_info.send(command[2],self.node_info.remotes[interfaceNum].remote_port)
+                self.lk.sendData(self.node_info.remotes[interfaceNum].remote_port,command[2])
                 
                 print(self.commandList[4])
             elif(command[0]==self.commandList[5]):#q
@@ -74,9 +74,12 @@ class Node:
                 print(self.commandList[6])
         
 if __name__=="__main__":
-    
+
     node=Node(sys.argv[1])
+    x=threading.Thread(target=node.run)
+    x.start()
+
     nodeThread=linklayerThreaded(node.lk.UDPSocket,10)
     nodeThread.run()
     print("what the hell")
-    node.run()
+
