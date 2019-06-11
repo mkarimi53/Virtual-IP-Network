@@ -11,27 +11,11 @@ class linklayer:
      #   self.UDPSocket.setblocking(False)
         self.recieving=True
     
+    
     def sendData(self,port,data):
         self.UDPSocket.sendto(data.encode(), (self.localIP,port))
     
     def recievingData(self):
-        print("recieving")
-        while(self.recieving):
-            msgFromServer = self.UDPSocket.recvfrom(self.bufferSize)
-            print(msgFromServer[0].decode())
-
- 
-class linklayerThreaded:
-    def __init__(self,UDPSocket,bufferSize):
-        self.localIP="127.0.0.1"
-        self.bufferSize=bufferSize
-        self.UDPSocket = UDPSocket
-        self.recieving=True
-
-    def sendData(self,port,massage):
-        self.UDPSocket.sendto(message.encode(), (self.localIP,port))
-
-    def run(self):
         print("recieving")
         while(self.recieving):
             try:
@@ -40,7 +24,7 @@ class linklayerThreaded:
                 print("i got error",r)
             print(msgFromServer[0].decode())
 
-
+ 
 class Node:
     def  __init__(self,filePath):
         print("sdfhsdj")
@@ -79,7 +63,7 @@ if __name__=="__main__":
     x=threading.Thread(target=node.run)
     x.start()
 
-    nodeThread=linklayerThreaded(node.lk.UDPSocket,10)
-    nodeThread.run()
+    link=node.lk
+    link.recievingData()
     print("what the hell")
 
