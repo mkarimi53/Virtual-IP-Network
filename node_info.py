@@ -39,6 +39,6 @@ class Node_info:
         for remote in self.remotes:
             remote.show()
 
-filepath = input('Enter filepath: ')
-node_info = Node_info(filepath)
-node_info.show()
+# filepath = input('Enter filepath: ')
+# node_info = Node_info(filepath)
+# node_info.show()

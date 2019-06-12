@@ -1,5 +1,6 @@
 import socket, threading,sys,selectors
 from node_info import Link_info,Node_info
+from IP import IPPacket
 class linklayer:
     def __init__(self,port,bufferSize):
         self.localPort=port
@@ -7,8 +8,7 @@ class linklayer:
         self.bufferSize=bufferSize
         self.UDPSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         
-        self.UDPSocket.bind((self.localIP, self.localPort))
-     #   self.UDPSocket.setblocking(False)
+        self.UDPSocket.bind((self.localIP, self.localPort)
         self.recieving=True
     
     
@@ -26,9 +26,7 @@ class linklayer:
 
  
 class Node:
-    def  __init__(self,filePath):
-        print("sdfhsdj")
-     
+    def  __init__(self,filePath):     
         self.commandList=["interfaces","routes","down","up","send","q","traceroute"]
         self.node_info=Node_info(filePath)
         self.lk=linklayer(self.node_info.lport,100)
@@ -65,5 +63,4 @@ if __name__=="__main__":
 
     link=node.lk
     link.recievingData()
-    print("what the hell")
 
