@@ -12,8 +12,8 @@ class IPPacket:
       self.dst=socket.inet_aton(dst)
       self.protocol=protocol# unsigned char differentiate between routing packets and other boolean value (0 or 200)
       self.TTL=ttl #useful for ICMP
-      self.ICMPtype=ICMPtype #1->routing packet 5->timeout packet 10->destination reached
-      self.ICMPredirectFromHost=socket.inet_aton(irfh) #for trace route
+      self.ICMPtype=ICMPtype #1->routing packet 2->timeout packet 3->destination reached 4->destination not reached
+      self.ICMPdirectFromHost=socket.inet_aton(irfh) #in dst interface router ghabli ke az tarighesh be in node residim
       self.packet=packet #type string
       self.checkSum=checkSumCalculator(dataLength) #ok what the is n???????/
     def packIPv4(self):
@@ -30,7 +30,7 @@ class IPPacket:
         self.protocol,\
         self.TTL,\
         self.ICMPtype,\
-        self.ICMPredirectFromHost,\
+        self.ICMPdirectFromHost,\
         self.checkSum
         bytearray(self.packet,'utf-8'))
       return raw
@@ -48,7 +48,7 @@ class IPPacket:
       self.protocol=headerTuple[7]
       self.TTL=headerTuple[8]
       self.ICMPtype=headerTuple[9]
-      self.ICMPredirectFromHost=socket.inet_ntoa(headerTuple[10])
+      self.ICMPdirectFromHost=socket.inet_ntoa(headerTuple[10])
       self.checkSum=headerTuple[11]
       self.packet=headerTuple[12].decode('utf-8')
 

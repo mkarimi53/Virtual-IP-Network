@@ -4,6 +4,7 @@ class Link_info:
         self.remote_port = 0
         self.local_virt_ip = ''
         self.remote_virt_ip = ''
+        self.active=True
         self.parse_info(info_line)
 
     def parse_info(self, info_line):
