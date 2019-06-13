@@ -18,7 +18,7 @@ class IPPacket:
       self.checkSum=checkSumCalculator(dataLength) #ok what the is n???????/
     def packIPv4(self):
       #little endian
-      #H 2byte B 1byte I 4byte s for string een alan 26 byte headersh kolan
+      #H 2byte B 1byte I 4byte s for string een alan 31 byte headersh kolan
       raw=struct.pack('<HHI?H4s4sBHBI4s'+str(self.dataLength)+'s',\
         self.headerLength,\
         self.dataLength,\
@@ -31,7 +31,7 @@ class IPPacket:
         self.TTL,\
         self.ICMPtype,\
         self.ICMPdirectFromHost,\
-        self.checkSum
+        self.checkSum,\
         bytearray(self.packet,'utf-8'))
       return raw
       
