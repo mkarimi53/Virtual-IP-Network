@@ -83,23 +83,21 @@ def traceRouteOperation(node,tr,packet):
 class BroadCast:
     port=10100
     def sendBroadCast(self,message):
-        dest = ('127.0.0.1',BroadCast.port)
+        dest = ('255.255.255.255',BroadCast.port)
         self.sendSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sendSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.sendSock.sendto(message.encode('utf-8'), dest)
     def receiveBroadCast(self):
+        self.recieveSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.recieveSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.recieveSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.recieveSock.bind(("255.255.255.255",BroadCast.port))
+             
         while(True):
             try:
                 print("listening to broadcast")
-                self.recieveSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                self.recieveSock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                self.recieveSock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-                self.recieveSock.bind(("127.0.0.1",BroadCast.port))
                 message, address = self.recieveSock.recvfrom(10104)
                 print(message.decode())
-                self.recieveSock.close()
-                self.sendBroadCast(message.decode())
-                time.sleep(2)
             except socket.error as r:
                 print(r)
         
