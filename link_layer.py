@@ -1,7 +1,6 @@
 import socket, threading, sys, time
 from node_info import Link_info, Node_info
 from IP import IPPacket
-#from traceroute import TraceRoute
 
 
 class LinkLayer:
@@ -170,6 +169,9 @@ class Node:
         self.broadCast=BroadCast()
         self.routingTable = RoutingTable()
         self.forwardingTable = self.routingTable.buildForwardingTable()
+        
+    
+
 
     # def SetTraceRouteAgent(self,tr):
     #     self.traceRouteAgent=tr #for node that call traceroute
@@ -210,10 +212,44 @@ class Node:
 
             elif(command[0]==self.commandList[6]):#traceroute
                 print(self.commandList[6])
-            #   self.traceRouteAgent.run()  
+                self.StartTraceRoute(command[1])  
 
             else:
                 print('command is invalid')
+    def StartTraceRoute(self,dst):
+        self.TTL=1
+        #pass dst to forwarding table and find interface port
+        #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
+        self.routingPacket=IPPacket()
+        self.routingPacket.assignValues("",0,0,0,interface src,dst,200,self.TTL,1,interface dst,"")
+        self.lk.sendData(inteface port,routingPacket.packIPv4())
+
+
+    def traceRouteOperation(self,packet):
+    #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
+
+        if(packet.ICMPtype==1):#routing packet
+            i=0
+            for x in self.node_info.remotes:
+                if(x.local_virt_ip==packet.dst):
+
+                    break
+                i+=1
+            if(self.node_info.remotes[i].local_virt_ip)
+
+            if(packet.dst==)
+            print("implement later")
+
+        elif(packet.ICMPtype==2):#ttl timeout 
+            print("implement later")
+
+        elif(packet.ICMPtype==3):#destination reached
+            print("implement later")
+
+        elif(packet.ICMPtype==4):#destination not reached
+            print("implement later")
+
+
 
     def run(self):
         commandLine=threading.Thread(target=self.runCommandLine)
@@ -225,32 +261,15 @@ class Node:
         while(self.lk.recieving):
             data=self.lk.recievingData()
             print(data.decode())
-            # packet=IPPacket()
-            # packet.unpackIPv4(data)
-            # if(packet.protocol==0):
-            #    print("resend after routing or print it")
-            # elif(packet.protocol==200):
-            #    traceRouteOperation(node, tr, packet)
+            packet=IPPacket()
+            packet.unpackIPv4(data)
+            if(packet.protocol==0):
+               print("resend after routing or print it")
+            elif(packet.protocol==200):
+               traceRouteOperation(node, tr, packet)
 
-
-def traceRouteOperation(node,tr,packet):
-    #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
-
-    if(packet.ICMPtype==1):#routing packet
-        print("implement later")
-
-    elif(packet.ICMPtype==2):#ttl timeout 
-        print("implement later")
-
-    elif(packet.ICMPtype==3):#destination reached
-        print("implement later")
-
-    elif(packet.ICMPtype==4):#destination not reached
-        print("implement later")
 
 
 if __name__=="__main__":
     node=Node(sys.argv[1])
     node.run()
-    # tr=TraceRoute()
-    # node.SetTraceRouteAgent(tr)

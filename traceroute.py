@@ -8,9 +8,8 @@ class TraceRoute:
     def __init__(self,linklayer,nodeInfo):
         self.linklayer=linklayer
         self.nodeInfo=nodeInfo
+    def run():
         self.currentTTL=1
-        self.graph=[]
-        self.reachedInterfaces=[]
-        for x in self.nodeInfo.remote:
-            self.graph.append()
-
+        self.path=[]
+        
+        self.linklayer.sendData()
