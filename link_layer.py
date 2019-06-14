@@ -52,14 +52,15 @@ class RoutingTable:
     def __init__(self, start):
         self.num_nodes = 0
         self.nodes_index = {}
+        self.index_ips = []
         self.table = []
         self.distances = {}
         self.nodes = []
         self.readFile()
         self.start = self.nodes_index[start]
         self.set_distances()
-        self.visited = {node: None for node in nodes}    #keeps distances from start to each node that has been visited
-        self.previous = {node: None for node in nodes}   
+        self.visited = {node: None for node in self.nodes}    #keeps distances from start to each node that has been visited
+        self.previous = {node: None for node in self.nodes}   
         self.dijkstra()
         # self.show()
 
@@ -77,6 +78,8 @@ class RoutingTable:
                 self.num_nodes += 1
             else:
                 break
+
+        self.findIPs()
         
         for row in range(self.num_nodes):
             self.table.append([])
@@ -94,6 +97,21 @@ class RoutingTable:
             self.table[self.nodes_index[words[0]]][self.nodes_index[words[2]]] = 1
             self.table[self.nodes_index[words[2]]][self.nodes_index[words[0]]] = 1
         
+    def findIPs(self):
+        num_nodes = 0
+        for node, index in self.nodes_index.items():
+            lnx_lines = []
+            with open('tools/' + node + '.lnx') as lnx_file:
+                for line in lnx_file:
+                    lnx_lines.append(line[:-1])
+
+                host, port = lnx_lines[0].split(' ')
+                if host == 'localhost':
+                    host = '127.0.0.1'
+                self.index_ips.append((host, port))
+                num_nodes += 1
+            
+
     def set_distances(self):
         for i in range(self.num_nodes):
             tempdict = {}
@@ -106,7 +124,7 @@ class RoutingTable:
     def show(self):
         for row in range(self.num_nodes):
             for col in range(self.num_nodes):
-                print(self.table[row][col], end=', ')
+                print(self.table[row][col], end=' ')
             print()
 
     def dijkstra(self):
@@ -154,13 +172,24 @@ class RoutingTable:
         path.append(dest)
 
         while dest != src:
-            path.append(previous[dest])
-            dest = previous[dest]
+            path.append(self.previous[dest])
+            dest = self.previous[dest]
 
         path.reverse()
+        return path
 
     def buildForwardingTable(self):
-        return {}   #A dictionary with destination (ip, port) key and the next hub (ip, port) as value
+        forwardingTable = {}
+        for i in range(self.num_nodes):
+            path = self.shortest_path(i)
+            if len(path) > 1:
+                next_hub = path[1]
+            else:
+                next_hub = path[0]
+
+            forwardingTable[self.index_ips[i]] = self.index_ips[next_hub]
+
+        return forwardingTable
 
 class Node:
     def  __init__(self,filePath):     
@@ -168,9 +197,13 @@ class Node:
         self.node_info=Node_info(filePath)
         self.lk=LinkLayer(self.node_info.lport,100)
         self.broadCast=BroadCast()
-        self.routingTable = RoutingTable()
+        self.routingTable = RoutingTable(self.node_info.start)
         self.forwardingTable = self.routingTable.buildForwardingTable()
+        self.showForwardingTable()
 
+    def showForwardingTable(self):
+        for (hostDest, portDest), (hostNext, portNext) in self.forwardingTable.items():
+            print('Dest: ', hostDest, ':', portDest, '\tNext: ', hostNext, ':', portNext)
     # def SetTraceRouteAgent(self,tr):
     #     self.traceRouteAgent=tr #for node that call traceroute
 

@@ -1,3 +1,5 @@
+import re
+
 class Link_info:
     def __init__(self, info_line):
         self.remote_host = ''
@@ -19,6 +21,7 @@ class Node_info:
     def __init__(self, filepath):
         self.lhost = ''
         self.lport = 0
+        self.start = re.search('/(.*).lnx', filepath).group(1)
         self.remotes = []
         self.parse_info(filepath)
 
