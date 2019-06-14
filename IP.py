@@ -16,6 +16,7 @@ class IPPacket:
       self.ICMPdirectFromHost=socket.inet_aton(irfh) #in dst interface router ghabli ke az tarighesh be in node residim
       self.packet=packet #type string
       self.checkSum=checkSumCalculator(dataLength) #ok what the is n???????/
+      
     def packIPv4(self):
       #little endian
       #H 2byte B 1byte I 4byte s for string een alan 31 byte headersh kolan
