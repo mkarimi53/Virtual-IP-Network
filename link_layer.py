@@ -48,11 +48,13 @@ class BroadCast:
             except socket.error as r:
                 print(r)
 
+
 class RoutingTable:
     def __init__(self, start):
         self.num_nodes = 0
         self.nodes_index = {}
         self.index_ips = []
+        self.index_interfaces = []
         self.table = []
         self.distances = {}
         self.nodes = []
@@ -109,9 +111,14 @@ class RoutingTable:
                 if host == 'localhost':
                     host = '127.0.0.1'
                 self.index_ips.append((host, port))
+
+                interfaces = []
+                for i in range(1, len(lnx_lines)):
+                    interfaces.append(lnx_lines[i].split(' ')[2])
+
+                self.index_interfaces.append(interfaces)
                 num_nodes += 1
             
-
     def set_distances(self):
         for i in range(self.num_nodes):
             tempdict = {}
@@ -187,7 +194,8 @@ class RoutingTable:
             else:
                 next_hub = path[0]
 
-            forwardingTable[self.index_ips[i]] = self.index_ips[next_hub]
+            for interface in self.index_interfaces[i]:
+                forwardingTable[interface] = self.index_ips[next_hub]
 
         return forwardingTable
 
@@ -202,8 +210,8 @@ class Node:
         self.showForwardingTable()
 
     def showForwardingTable(self):
-        for (hostDest, portDest), (hostNext, portNext) in self.forwardingTable.items():
-            print('Dest: ', hostDest, ':', portDest, '\tNext: ', hostNext, ':', portNext)
+        for virt_ip, (hostNext, portNext) in self.forwardingTable.items():
+            print('Dest: ', virt_ip, '\tNext: ', hostNext, ':', portNext)
     # def SetTraceRouteAgent(self,tr):
     #     self.traceRouteAgent=tr #for node that call traceroute
 
