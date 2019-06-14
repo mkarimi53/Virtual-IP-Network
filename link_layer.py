@@ -206,13 +206,7 @@ class Node:
         self.broadCast=BroadCast()
         self.routingTable = RoutingTable(self.node_info.start)
         self.forwardingTable = self.routingTable.buildForwardingTable()
-<<<<<<< HEAD
-        
-    
-
-=======
         self.showForwardingTable()
->>>>>>> 34c8d43a876d7c62dd64d29ea00b6629f367ff35
 
     def showForwardingTable(self):
         for virt_ip, (hostNext, portNext) in self.forwardingTable.items():
