@@ -199,6 +199,37 @@ class RoutingTable:
 
         return forwardingTable
 
+    def updateTable(self, linterface, rinterface, lnode, rnode, mode='up'):
+        for index, interface in self.index_interfaces:
+            if interface == linterface:
+                lindex = index
+                del self.index_interfaces[index]
+
+            elif interface == rinterface:
+                rindex = index
+                del self.index_interfaces[index]
+        if mode == 'up':
+            self.index_interfaces[lnode].append(linterface)
+            self.index_interfaces[rnode].append(rinterface)
+            self.table[lnode][rnode] = 1
+            self.table[rnode][lnode] = 1
+        elif mode == 'down':
+            for i in range(len(self.index_interfaces[lnode])):
+                if self.index_interfaces[lnode][i] == linterface:
+                    del self.index_interfaces[lnode][i]
+
+            for i in range(len(self.index_interfaces[rnode])):
+                if self.index_interfaces[rnode][i] == rinterface:
+                    del self.index_interfaces[rnode][i]
+
+            self.table[lnode][rnode] = -1
+            self.table[rnode][lnode] = -1
+
+        self.set_distances()
+        self.dijkstra()
+        return self.buildForwardingTable()
+
+        
 class Node:
     def  __init__(self,filePath):     
         self.commandList=["interfaces","routes","down","up","send","q","traceroute"]
@@ -212,6 +243,7 @@ class Node:
     def showForwardingTable(self):
         for virt_ip, (hostNext, portNext) in self.forwardingTable.items():
             print('Dest: ', virt_ip, '\tNext: ', hostNext, ':', portNext)
+                
     # def SetTraceRouteAgent(self,tr):
     #     self.traceRouteAgent=tr #for node that call traceroute
 
@@ -239,6 +271,7 @@ class Node:
 
             elif(command[0]==self.commandList[3]):#up
                 print(self.commandList[3])
+                
 
             elif(command[0]==self.commandList[4]):#send
                 interfaceNum=int(command[1])
