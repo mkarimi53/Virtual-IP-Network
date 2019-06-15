@@ -8,12 +8,12 @@ class IPPacket:
       self.id=id# something line seq number unique for every packet in maximum datagram life time
       self.fragFlag=fragFlag #boolean value for packets that is fragmentated  or all other required flags
       self.fragOffset=fragOffset 
-      self.src=socket.inet_aton(src)
-      self.dst=socket.inet_aton(dst)
+      self.src=src
+      self.dst=dst
       self.protocol=protocol# unsigned char differentiate between routing packets and other boolean value (0 or 200)
       self.TTL=ttl #useful for ICMP
       self.ICMPtype=ICMPtype #1->routing packet 2->timeout packet 3->destination reached 4->destination not reached
-      self.ICMPdirectFromHost=socket.inet_aton(irfh) #in dst interface router ghabli ke az tarighesh be in node residim
+      self.expectedHost=irfh #in dst interface router ghabli ke az tarighesh be in node residim
       self.packet=packet #type string
       self.checkSum=checkSumCalculator(dataLength) #ok what the is n???????/
       
@@ -26,12 +26,12 @@ class IPPacket:
         self.id,\
         self.fragFlag,\
         self.fragOffest,\
-        self.src,\
-        self.dst,\
+        socket.inet_aton(self.src),\
+        socket.inet_aton(self.dst),\
         self.protocol,\
         self.TTL,\
         self.ICMPtype,\
-        self.ICMPdirectFromHost,\
+        socket.inet_aton(self.expectedHost),\
         self.checkSum,\
         bytearray(self.packet,'utf-8'))
       return raw
@@ -49,7 +49,7 @@ class IPPacket:
       self.protocol=headerTuple[7]
       self.TTL=headerTuple[8]
       self.ICMPtype=headerTuple[9]
-      self.ICMPdirectFromHost=socket.inet_ntoa(headerTuple[10])
+      self.expectedHost=socket.inet_ntoa(headerTuple[10])
       self.checkSum=headerTuple[11]
       self.packet=headerTuple[12].decode('utf-8')
 

@@ -255,37 +255,72 @@ class Node:
             else:
                 print('command is invalid')
     def StartTraceRoute(self,dst):
+        self.TracePaths=[]
         self.TTL=1
+        (ip,self.routing_port)=self.forwardingTable[dst]
+        interface,valid=self.findInterfacebyPort(self.routing_port)
         #pass dst to forwarding table and find interface port
         #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
         self.routingPacket=IPPacket()
-        self.routingPacket.assignValues("",0,0,0,interface src,dst,200,self.TTL,1,interface dst,"")
-        self.lk.sendData(inteface port,routingPacket.packIPv4())
-
+        self.routingPacket.assignValues("",0,0,0,interface.local_virt_ip,dst,200,self.TTL,1,interface.remote_virt_ip,"")
+        self.lk.sendData(self.routing_port,self.routingPacket.packIPv4())
+    def findInterfacebyPort(self,port):
+        for x in self.node_info.remotes:
+            if x.remote_port==port:
+                return x,True
+        return None,False
+    def findInterfacebylocalIP(self,ip):
+        for x in self.node_info.remotes:
+            if x.local_virt_ip==ip:
+                return x,True
+        return None,False
 
     def traceRouteOperation(self,packet):
     #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
-
+        routingPacket=IP()
         if(packet.ICMPtype==1):#routing packet
-            i=0
-            for x in self.node_info.remotes:
-                if(x.local_virt_ip==packet.dst):
-
-                    break
-                i+=1
-            if(self.node_info.remotes[i].local_virt_ip)
-
-            if(packet.dst==)
-            print("implement later")
+            if(packet.dst==packet.expectedHost):
+                (host,port)=self.forwardingTable(packet.src)
+                routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,3,packet.dst,"")
+                self.lk.sendData(port,routingPacket.packIPv4())
+            else:
+                interface,valid=self.findInterfacebylocalIP(packet.dst)
+                if(valid):
+                    (host,port)=self.forwardingTable(packet.src)
+                    routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,3,packet.expectedHost,"")
+                    self.lk.sendData(port,routingPacket.packIPv4())
+                else:
+                    if(packet.TTL>0):
+                        (host,port)=self.forwardingTable(packet.dst)
+                        interface,port=self.findInterfacebyPort(port)                    
+                        packet.TTL-=1
+                        packet.expectedHost=interface.remote_virt_ip
+                        self.lk.sendData(port,packet.packetIPv4())
+                    else:
+                        (host,port)=self.forwardingTable(packet.src)
+                        (host2,port2)=self.forwardingTable(packet.dst)
+                        interface,port=self.findInterfacebyPort(port2)
+                        routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,2,interface.local_virt_ip,"")
+                        self.lk.sendData(port,routingPacket.packIPv4())
 
         elif(packet.ICMPtype==2):#ttl timeout 
-            print("implement later")
+            interface,valid=findInterfacebylocalIP(packet.dst)
+            if(valid): 
+                self.TracePaths.append(packet.expectedHost)
+                if(packet.src!=packet):
+                    self.TracePaths.append(packet.src)
+                
+                self.routingPacket.TTL+=1
+                self.lk.sendData(self.routing_port,self.routingPacket.packIPv4())
+            else:
+                (host,port)=self.forwardingTable[packet.dst]
+                self.lk.sendData(port,packet.packIPv4())
 
         elif(packet.ICMPtype==3):#destination reached
-            print("implement later")
-
-        elif(packet.ICMPtype==4):#destination not reached
-            print("implement later")
+            self.TracePaths.append(packet.expectedHost)
+            if(packet.src!=packet.expectedHost):
+                self.TracePaths.append(packet.src)
+            print(self.TracePaths)
 
 
 
