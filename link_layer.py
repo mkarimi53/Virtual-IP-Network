@@ -67,7 +67,7 @@ class RoutingTable:
 
     def readFile(self):
         net_lines = []
-        with open('nets/ABC.net') as net_file:
+        with open('nets/tree.net') as net_file:
             for line in net_file:
                 net_lines.append(line[:-1])
 
@@ -109,7 +109,7 @@ class RoutingTable:
                 host, port = lnx_lines[0].split(' ')
                 if host == 'localhost':
                     host = '127.0.0.1'
-                self.index_ips.append((host, port))
+                self.index_ips.append((host, int(port)))
 
                 interfaces = []
                 for i in range(1, len(lnx_lines)):
@@ -289,17 +289,19 @@ class Node:
                 print('command is invalid')
     def StartTraceRoute(self,dst):
         self.TracePaths=[]
+        
         self.TTL=1
         (ip,self.routing_port)=self.forwardingTable[dst]
         interface,valid=self.findInterfacebyPort(self.routing_port)
+        self.TracePaths.append(interface.local_virt_ip)
         #pass dst to forwarding table and find interface port
         #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
         self.routingPacket=IPPacket()
-        self.routingPacket.assignValues("",0,0,0,interface.local_virt_ip,dst,200,self.TTL,1,interface.remote_virt_ip,"")
+        self.routingPacket.assignValues(0,0,False,0,interface.local_virt_ip,dst,200,self.TTL,1,interface.remote_virt_ip,"")
         self.lk.sendData(self.routing_port,self.routingPacket.packIPv4())
     def findInterfacebyPort(self,port):
-        for x in self.node_info.remotes:
-            if x.remote_port==port:
+        for x in self.node_info.remotes:        
+            if x.remote_port==int(port):
                 return x,True
         return None,False
     def findInterfacebylocalIP(self,ip):
@@ -310,50 +312,65 @@ class Node:
 
     def traceRouteOperation(self,packet):
     #def assignValues(self,dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet):
-        routingPacket=IP()
+        routingPacket=IPPacket()
         if(packet.ICMPtype==1):#routing packet
             if(packet.dst==packet.expectedHost):
-                (host,port)=self.forwardingTable(packet.src)
-                routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,3,packet.dst,"")
+                (host,port)=self.forwardingTable[packet.src]
+                routingPacket.assignValues(0,0,False,0,packet.dst,packet.src,200,90,3,packet.dst,"")
+                print("send routing 1",port)
                 self.lk.sendData(port,routingPacket.packIPv4())
             else:
                 interface,valid=self.findInterfacebylocalIP(packet.dst)
                 if(valid):
-                    (host,port)=self.forwardingTable(packet.src)
-                    routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,3,packet.expectedHost,"")
+                    (host,port)=self.forwardingTable[packet.src]
+                    routingPacket.assignValues(0,0,False,0,packet.dst,packet.src,200,90,3,packet.expectedHost,"")
+                    print("send routing 2",port)
                     self.lk.sendData(port,routingPacket.packIPv4())
                 else:
+                    packet.TTL-=1
                     if(packet.TTL>0):
-                        (host,port)=self.forwardingTable(packet.dst)
-                        interface,port=self.findInterfacebyPort(port)                    
-                        packet.TTL-=1
+                        (host,port)=self.forwardingTable[packet.dst]
+                        interface,valid=self.findInterfacebyPort(port)                    
                         packet.expectedHost=interface.remote_virt_ip
-                        self.lk.sendData(port,packet.packetIPv4())
+                        print("send routing 3",port)
+                        self.lk.sendData(port,packet.packIPv4())
                     else:
-                        (host,port)=self.forwardingTable(packet.src)
-                        (host2,port2)=self.forwardingTable(packet.dst)
-                        interface,port=self.findInterfacebyPort(port2)
-                        routingPacket.assignValues(0,0,0,False,packet.dst,packet.src,90,2,interface.local_virt_ip,"")
+                        (host,port)=self.forwardingTable[packet.src]
+                        (host2,port2)=self.forwardingTable[packet.dst]
+                        interface,valid=self.findInterfacebyPort(port2)
+                        routingPacket.assignValues(0,0,False,0,packet.expectedHost,packet.src,200,90,2,interface.local_virt_ip,"")
+                        print("send routing 4",port)
                         self.lk.sendData(port,routingPacket.packIPv4())
 
         elif(packet.ICMPtype==2):#ttl timeout 
-            interface,valid=findInterfacebylocalIP(packet.dst)
-            if(valid): 
-                self.TracePaths.append(packet.expectedHost)
+            interface,valid=self.findInterfacebylocalIP(packet.dst)
+            if(valid):
+                self.TracePaths.append(packet.src)
+                     
                 if(packet.src!=packet):
-                    self.TracePaths.append(packet.src)
+                    self.TracePaths.append(packet.expectedHost)
                 
                 self.routingPacket.TTL+=1
+                print("send ttl 1")
                 self.lk.sendData(self.routing_port,self.routingPacket.packIPv4())
             else:
                 (host,port)=self.forwardingTable[packet.dst]
+                print("send ttl 2",port)
                 self.lk.sendData(port,packet.packIPv4())
 
         elif(packet.ICMPtype==3):#destination reached
-            self.TracePaths.append(packet.expectedHost)
-            if(packet.src!=packet.expectedHost):
-                self.TracePaths.append(packet.src)
-            print(self.TracePaths)
+            print("reached")
+            interface,valid=self.findInterfacebylocalIP(packet.dst)
+            if(valid):
+                self.TracePaths.append(packet.expectedHost)
+                    
+                if(packet.src!=packet.expectedHost):
+                    self.TracePaths.append(packet.src)
+    
+                print(self.TracePaths)
+            else:
+                (ip,port)=self.forwardingTable[packet.dst]
+                self.lk.sendData(port,packet.packIPv4())
 
 
 
@@ -366,13 +383,15 @@ class Node:
 
         while(self.lk.recieving):
             data=self.lk.recievingData()
-            print(data.decode())
+         #   print(data[0].decode())
             packet=IPPacket()
-            packet.unpackIPv4(data)
+            packet.unpackIPv4(data[0])
+            print("recieved!")
+            print(packet.src,packet.dst,packet.ICMPtype,packet.expectedHost)
             if(packet.protocol==0):
                print("resend after routing or print it")
             elif(packet.protocol==200):
-               traceRouteOperation(node, tr, packet)
+               self.traceRouteOperation( packet)
 
 
 
