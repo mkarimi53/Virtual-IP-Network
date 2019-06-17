@@ -15,7 +15,10 @@ class LinkLayer:
         self.recieving=True
     
     def sendData(self,port,data):
-        self.UDPSocket.sendto(data, (self.localIP,port))
+        if(len(data)<1500):
+            self.UDPSocket.sendto(data, (self.localIP,port))
+        else:
+            print("packet size is big")
     
     def recievingData(self):
         try:
@@ -247,10 +250,13 @@ class Node:
     #     self.traceRouteAgent=tr #for node that call traceroute
 
     def sendIPMessageToDst(self,dstIP,message):
-        #ippacket=IPPacket()
+        ippacket=IPPacket()
         #find interface and next node from routing table 
-        #ippacket.assignValues(dataLength,id,fragFlag,fragOffset,src,dst,protocol,ttl,ICMPtype,irfh,packet)
-        self.lk.sendData(dstIP,message.encode('utf-8'))           
+        (host,port)=self.forwardingTable[dstIP]
+        interface,valid=self.findInterfacebyPort(port)
+
+        ippacket.assignValues(len(message),0,0,0,interface.local_virt_ip,dstIP,0,90,1,"127.0.0.1",message)
+        self.lk.sendData(port,ippacket.packIPv4())           
 
     def runCommandLine(self):
         while(True):
@@ -262,7 +268,7 @@ class Node:
                     print(x.remote_host,x.remote_port,x.local_virt_ip,x.remote_virt_ip)
 
             elif(command[0]==self.commandList[1]):#routes
-                self.br.sendBroadCast("hhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+              #  self.br.sendBroadCast("hhhhhhhhhhhhhhhhhhhhhhhhhhhh")
                 print(self.commandList[1])
 
             elif(command[0]==self.commandList[2]):#down
@@ -275,7 +281,7 @@ class Node:
             elif(command[0]==self.commandList[4]):#send
                 interfaceNum=int(command[1])
                 self.sendIPMessageToDst(self,dstIP,command[2])
-                print(self.commandList[4])
+             #   print(self.commandList[4])
 
             elif(command[0]==self.commandList[5]):#q
                 print(self.commandList[5])
@@ -389,7 +395,15 @@ class Node:
             print("recieved!")
             print(packet.src,packet.dst,packet.ICMPtype,packet.expectedHost)
             if(packet.protocol==0):
-               print("resend after routing or print it")
+                interface,valid=self.findInterfacebylocalIP(packet.dst)
+                if(valid):
+                    print(packet.packet)
+                else:
+                    (host,port)=self.forwardingTable[packet.dst]
+                    packet.TTL-=1
+                    if(packet.TTL>0):
+                        self.lk.sendData(port,packet.packIPv4())           
+               
             elif(packet.protocol==200):
                self.traceRouteOperation( packet)
 
